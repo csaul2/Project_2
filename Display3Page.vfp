@@ -1,0 +1,115 @@
+<apex:page docType="html-5.0" controller="TestDisplay3Controller" >
+	<style>
+        @media only screen and (min-width: 1001px) {
+        	
+        	h1 { color: white; font-size: 30pt; }
+        	#responsiveDiv { width: 70%; margin-left: 15%; margin-right: 15%; }
+        	input, input[type="submit"], select { font-size: 16pt; }
+        }
+
+		@media only screen and (max-width: 1000px) {
+
+        	h1 { color: white; font-size: 20pt; }
+			#responsiveDiv { width: 90%; margin-left: 5%; margin-right: 5%; }
+        	input, input[type="submit"], select { font-size: 14pt; }
+		}
+        
+        body { background-color: rgb(0, 0, 89, 0.8); }
+        
+        #pageDiv {
+        
+        	background-image: -webkit-repeating-linear-gradient(135deg, rgba(0,0,0,.3), rgba(0,0,0,.3) 1px, transparent 2px, transparent 2px, rgba(0,0,0,.3) 3px);
+        	background-image: -moz-repeating-linear-gradient(135deg, rgba(0,0,0,.3), rgba(0,0,0,.3) 1px, transparent 2px, transparent 2px, rgba(0,0,0,.3) 3px);
+			background-image: -o-repeating-linear-gradient(135deg, rgba(0,0,0,.3), rgba(0,0,0,.3) 1px, transparent 2px, transparent 2px, rgba(0,0,0,.3) 3px);
+			background-image: repeating-linear-gradient(135deg, rgba(0,0,0,.3), rgba(0,0,0,.3) 1px, transparent 2px, transparent 2px, rgba(0,0,0,.3) 3px);
+			-webkit-background-size: 4px 4px;
+			-moz-background-size: 4px 4px;
+			background-size: 4px 4px;
+        }
+        
+        form { background: transparent;}
+        
+        input[type="text"], input[type="datetime-local"], select { 
+        	
+        	background-color: white;
+        	color: black;
+        	border: 2px solid; 
+        	border-color: white;
+        }
+        
+        input[type="text"]:focus, input[type="datetime-local"]:focus, select:focus { 
+        	
+        	background-color: white;
+        	color: red;
+        	border: 2px solid; 
+        	border-color: red;
+        }
+        
+        input[type="submit"] {
+        
+        	background: red;
+        	border: 2px solid; 
+        	border-color: red; 
+        	color: white;
+			border-top-left-radius: 50px 50px;
+        	border-bottom-left-radius: 50px 50px;
+        	border-top-right-radius: 50px 50px;
+        	border-bottom-right-radius: 50px 50px;
+        }
+        
+        input[type="submit"]:hover,
+        input[type="submit"]:focus { background: white; border: 2px solid; border-color: red; color: red; }
+    </style>
+    <apex:form >
+        <apex:pageBlock>
+            <div>
+                <apex:selectList size="1" value="{!cinema}" style="width: 20%; border:0.8px solid black; margin-right: 10px;">
+            		<apex:selectOptions value="{!cinemaPicklist}" />
+                </apex:selectList> 
+                <apex:input value="{!movieSearch}" type="text" style="width: 20%; border:0.8px solid black; margin-right: 10px;" />
+                <apex:input value="{!startTime}" type="datetime-local" style="width: 20%; border:0.8px solid black; margin-right: 10px;" />
+                <apex:input value="{!endTime}" type="datetime-local" style="width: 20%; border:0.8px solid black; margin-right: 10px;" /> 
+                <apex:commandButton style="margin-right: 10px;" action="{!triggerSearch}" value="Search"/>
+                <apex:commandButton action="{!goToSearch}" value="Home" />
+            </div>
+            <apex:pageBlockTable value="{!movies}" var="movie" rendered="true" >
+                <apex:column width="140px" >
+                    <apex:facet name="header" >Movie Info</apex:facet>
+                    <apex:outputLink value="Display3Page" >
+                        <apex:param name="movieSearch" value="{!movie.Name}" />
+                        <apex:outputField value="{!movie.Poster__c}" />
+                    </apex:outputLink>
+                </apex:column>    
+                <apex:column width="500px" >
+                    <apex:outputlink value="Display3Page" >
+                        <apex:param name="movieSearch" value="{!movie.Name}" />
+                        {!movie.Name}
+                    </apex:outputlink><br /><br />
+                    
+                    <apex:outputField value="{!movie.Rating__c}" /><br /><br />
+                    <apex:outputField value="{!movie.Description__c}" /><br /><br />
+                </apex:column>
+                <apex:column >
+                    
+                    <apex:pageBlockTable value="{!movie.Showtimes__r}" var="showtime" >
+                        <apex:column >
+                            <apex:facet name="header">Showtimes</apex:facet>
+                            <apex:outputLink value="ReservationPage">
+                                <apex:param name="showtimeId" value="{!showtime.Id}"/>
+                                <apex:outputField value="{!showtime.StartTime__c}" />
+                            </apex:outputLink>
+                        </apex:column>
+                        
+                        <apex:column >
+                            <apex:facet name="header">Cinema</apex:facet>
+                            <apex:outputLink value="TestDisplay3">
+                                <apex:param name="cinema" value="{!showtime.Theater__r.Cinema__r.Name}" />
+                                <apex:outputText value="{!showtime.Theater__r.Cinema__r.Name}" />
+                            </apex:outputLink>
+                        </apex:column>
+                    </apex:pageBlockTable>
+                </apex:column>
+            </apex:pageBlockTable>
+        </apex:pageBlock>
+    </apex:form>
+</apex:page>

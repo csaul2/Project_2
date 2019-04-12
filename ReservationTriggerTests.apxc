@@ -1,0 +1,64 @@
+@isTest
+public class ReservationTriggerTests {
+    @isTest static void testReservationInsert() {
+        Test.startTest();
+        
+        Cinema__c c = new Cinema__c(name='Test Cinema');
+        insert c;
+        System.debug(c);
+        
+        Theater__c t = new Theater__c(Cinema__c=c.Id, Capacity__c=50);
+        insert t;
+        System.debug(t);
+
+        Movie__c m = new Movie__c(name='Test Movie');
+        insert m;
+        System.debug(m);
+        
+        Datetime testTime = Datetime.newInstance(2008, 12, 1, 12, 30, 2);
+        Showtime__c s = new Showtime__c(Theater__c=t.Id, Movie__c=m.Id, StartTime__c=testTime, ReservedSeats__c=0);
+        insert s;
+        System.debug(s);
+        s = [SELECT Id, Movie__c, StartTime__c, ReservedSeats__c, RemainingSeats__c FROM Showtime__c WHERE Id = :s.Id];
+        System.debug(s);
+        
+        System.assertEquals(0, s.ReservedSeats__c);
+        System.assertEquals(50, s.RemainingSeats__c);
+        //System.debug(s.ReservedSeats__c);
+        //System.debug(s.RemainingSeats__c);
+        
+        Reservation__c r = new Reservation__c(Showtime__c=s.Id, Quantity__c=4);
+        insert r;
+        
+        s = [SELECT Id, Movie__c, StartTime__c, ReservedSeats__c, RemainingSeats__c FROM Showtime__c WHERE Id = :s.Id];
+        
+        System.debug(s);
+        System.debug(r);
+        
+        System.assertEquals(4, s.ReservedSeats__c);
+        System.assertEquals(46, s.RemainingSeats__c);
+        //System.debug(s.ReservedSeats__c);
+        //System.debug(s.RemainingSeats__c);
+        
+        Reservation__c r2 = new Reservation__c(Showtime__c=s.Id, Quantity__c=99);
+        try {
+            insert r2;
+        } catch (Exception e) {
+            System.debug('r2 was rejected');
+        }
+        
+        Reservation__c r3 = new Reservation__c(Showtime__c=m.Id, Quantity__c=2);
+        try {
+            insert r3;
+        } catch (Exception e) {
+            System.debug('r3 was rejected');
+        }
+        
+        s = [SELECT Id, Movie__c, StartTime__c, ReservedSeats__c, RemainingSeats__c FROM Showtime__c WHERE Id = :s.Id];
+        
+        System.assertEquals(4, s.ReservedSeats__c);
+        System.assertEquals(46, s.RemainingSeats__c);
+        
+        Test.stopTest();
+    }
+}

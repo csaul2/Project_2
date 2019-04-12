@@ -1,0 +1,76 @@
+@isTest(SeeAllData=true)
+public class ResultsControllerTest {
+    @isTest static void testHome() {
+        PageReference pageRef = Page.Display3Page;
+        
+        TestDisplay3Controller control = new TestDisplay3Controller();
+        
+        PageReference out = control.goToSearch();
+        
+        System.assertEquals(Page.TimLandingPage.getUrl(), out.getUrl());
+    }
+    
+    @isTest static void testCinemaList() {
+        PageReference pageRef = Page.Display3Page;
+        
+        TestDisplay3Controller control = new TestDisplay3Controller();
+        
+        control.cinema = '';
+        control.movieSearch = 'cap';
+        control.endTime = DateTime.now();
+        
+        List<SelectOption> output = new List<SelectOption>();
+        output.add(new SelectOption('', 'Choose a cinema', false));
+        
+        for (Cinema__c cinemaOption: [SELECT Name FROM Cinema__c ORDER BY Name ASC]) {
+            output.add(new SelectOption(cinemaOption.Name, cinemaOption.Name, false));
+        }
+        
+        List<SelectOption> results = control.getCinemaPicklist();
+        
+        System.assertEquals(output, results);
+    }
+    
+        
+    @isTest static void testSearchSuccess() {
+        PageReference pageRef = Page.Display3Page;
+        
+        TestDisplay3Controller control = new TestDisplay3Controller();
+        
+        PageReference out = control.triggerSearch();
+        
+        // Parse the time based stuff off as they won't be called at the same time
+        String stringUrl = out.getUrl();
+        List<String> parsedUrl = stringUrl.split('\\?');
+        
+        System.assertEquals(Page.Display3Page.getUrl(), parsedUrl[0]);
+    }
+    
+    @isTest static void testStartNull() {
+        PageReference pageRef = Page.Display3Page;
+        
+        TestDisplay3Controller control = new TestDisplay3Controller();
+        
+        control.cinema = '';
+        control.movieSearch = 'cap';
+        control.startTime = DateTime.now();
+        control.endTime = null;
+        
+        PageReference out = control.triggerSearch();
+    }
+    
+    @isTest static void testWrongDateOrder() {
+        PageReference pageRef = Page.Display3Page;
+        
+        TestDisplay3Controller control = new TestDisplay3Controller();
+        
+        control.cinema = '';
+        control.movieSearch = 'cap';
+        control.startTime = DateTime.now().addDays(1);
+        control.endTime = DateTime.now();
+        
+        PageReference out = control.triggerSearch();
+        
+        System.assertEquals(null, out);
+    }
+}

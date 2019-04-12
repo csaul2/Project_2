@@ -1,0 +1,48 @@
+public class FindShowTimes {
+    // Variables
+    public String cinema {get; set;}
+    public String movieTitle {get; set;}
+    public DateTime showDateTimeBeginningIn {get; set;}
+    public DateTime showDateTimeEndingIn {get; set;}
+    
+    public FindShowTimes() {
+        showDateTimeBeginningIn = DateTime.now();
+    }
+    
+    // Create picklist of cinemas
+    public List<SelectOption> getCinemaPicklist() {
+        List<SelectOption> output = new List<SelectOption>();
+        output.add(new SelectOption('', 'Choose a cinema', false));
+        
+        try {
+            for (Cinema__c cinemaOption: [SELECT Name FROM Cinema__c ORDER BY Name ASC]) {
+                output.add(new SelectOption(cinemaOption.Name, cinemaOption.Name, false));
+            }
+        } catch (Exception e) {
+            System.debug('An unexpected database error has occurred: ' + e.getMessage());
+        }
+        
+        return output;
+    }
+    
+    // Pass parameters to search page
+    public PageReference triggerSearch() {
+        if (showDateTimeBeginningIn == null || showDateTimeBeginningIn < DateTime.now()){
+            showDateTimeBeginningIn = DateTime.now();
+        }
+        if (showDateTimeEndingIn < showDateTimeBeginningIn){
+            // Add error of some sort
+            showDateTimeEndingIn = showDateTimeBeginningIn.addDays(1);
+            return null;
+        } else {
+            PageReference resultPage = Page.Display3Page;
+            resultPage.setRedirect(true);
+            resultPage.getParameters().put('cinema', cinema);
+            resultPage.getParameters().put('movieSearch', movieTitle);
+            resultPage.getParameters().put('startTime', String.valueOf(showDateTimeBeginningIn));
+            resultPage.getParameters().put('endTime', String.valueOf(showDateTimeEndingIn));
+            
+            return resultPage;
+        }  
+    }
+}

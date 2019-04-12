@@ -1,0 +1,106 @@
+public with sharing class TestDisplay3Controller {
+    public String movieSearch {get; set;}
+    public String cinema {get; set;}
+    public DateTime startTime {get; set;}
+    public DateTime endTime {get; set;}
+    private String queryShowtimeString;
+    private String queryMovieString;
+    private List<Showtime__c> showtimes;
+    private Set<Id> movieIds;
+    public List<Movie__c> movies {get; set;}
+    
+    public TestDisplay3Controller() {
+        // get params
+        movieSearch = System.currentPageReference().getParameters().get('movieSearch');
+        cinema = System.currentPageReference().getParameters().get('cinema');
+        if (System.currentPageReference().getParameters().get('startTime') == null) {
+            startTime = DateTime.Now();
+        } else {
+            startTime = DateTime.valueOf(System.currentPageReference().getParameters().get('startTime'));
+        }
+        if (System.currentPageReference().getParameters().get('endTime') == null) {
+            endTime = DateTime.Now().addYears(1);
+        } else {
+            endTime = DateTime.valueOf(System.currentPageReference().getParameters().get('endTime'));
+        }
+        
+        System.debug(movieSearch);
+        System.debug(cinema);
+        System.debug(startTime);
+        System.debug(endTime);
+        
+        // construct query string and query for movies with related info
+        queryShowtimeString = 'SELECT StartTime__c, Theater__r.Cinema__r.Name, Movie__c FROM Showtime__c WHERE StartTime__c >= :startTime AND StartTime__c <= :endTime';
+        if (cinema != null && cinema != '') {
+            queryShowtimeString += ' AND Theater__r.Cinema__r.Name = :cinema';
+        }
+        queryShowtimeString += ' ORDER BY StartTime__c ASC';
+        
+        showtimes = Database.query(queryShowtimeString);
+        
+        //showtimes = [SELECT StartTime__c, Theater__r.Cinema__r.Name, Movie__c FROM Showtime__c WHERE StartTime__c >= :startTime AND StartTime__c <= :endTime];
+        
+        movieIds = new Set<Id>();
+        for (Showtime__c s : showtimes) {
+            movieIds.add(s.Movie__c);
+        }
+        
+        queryShowtimeString = 'SELECT StartTime__c, Theater__r.Cinema__r.Name FROM Showtimes__r WHERE StartTime__c >= :startTime AND StartTime__c <= :endTime';
+        if (cinema != null && cinema != '') {
+            queryShowtimeString += ' AND Theater__r.Cinema__r.Name = :cinema';
+        }
+        queryShowtimeString += ' ORDER BY StartTime__c ASC';
+        
+        queryMovieString = 'SELECT Name, Poster__c, Description__c, Rating__c, Runtime__c, (' + queryShowtimeString + ') FROM Movie__c WHERE Id IN :movieIds';
+        if (movieSearch != null && movieSearch != '') {
+            queryMovieString += ' AND Name LIKE \'' + movieSearch + '%\'';
+        }
+        queryMovieString += ' ORDER BY Name ASC';
+        
+        movies = Database.query(queryMovieString);
+        
+        System.debug(movies);
+        
+    } // end constructor
+    
+        // Create picklist of cinemas
+    public List<SelectOption> getCinemaPicklist() {
+        List<SelectOption> output = new List<SelectOption>();
+        output.add(new SelectOption('', 'Choose a cinema', false));
+        
+        try {
+            for (Cinema__c cinemaOption: [SELECT Name FROM Cinema__c ORDER BY Name ASC]) {
+                output.add(new SelectOption(cinemaOption.Name, cinemaOption.Name, false));
+            }
+        } catch (Exception e) {
+            System.debug('An unexpected database error has occurred: ' + e.getMessage());
+        }
+        
+        return output;
+    }
+    
+    public PageReference goToSearch() {
+        return Page.TimLandingPage;
+    }
+    
+    // Pass parameters to search page
+    public PageReference triggerSearch() {
+        if (startTime == null || startTime < DateTime.now()){
+            startTime = DateTime.now();
+        }
+        if (endTime < startTime){
+            // Add error of some sort
+            endTime = startTime.addDays(1);
+            return null;
+        } else {
+            PageReference resultPage = Page.Display3Page;
+            resultPage.setRedirect(true);
+            resultPage.getParameters().put('cinema', cinema);
+            resultPage.getParameters().put('movieSearch', movieSearch);
+            resultPage.getParameters().put('startTime', String.valueOf(startTime));
+            resultPage.getParameters().put('endTime', String.valueOf(endTime));
+            
+            return resultPage;
+        }  
+    }
+}

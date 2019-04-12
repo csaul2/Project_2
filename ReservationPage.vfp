@@ -1,0 +1,88 @@
+<apex:page Controller="ReservationController" docType="html-5.0">
+	<style>
+        @media only screen and (min-width: 1001px) {
+        	
+        	h1 { color: white; font-size: 30pt; }
+        	#responsiveDiv { width: 70%; margin-left: 15%; margin-right: 15%; }
+        	input, input[type="submit"], select { font-size: 16pt; }
+        }
+
+		@media only screen and (max-width: 1000px) {
+
+        	h1 { color: white; font-size: 20pt; }
+			#responsiveDiv { width: 90%; margin-left: 5%; margin-right: 5%; }
+        	input, input[type="submit"], select { font-size: 14pt; }
+		}
+        
+        body { background-color: rgb(0, 0, 89, 0.8); }
+        
+        #pageDiv {
+        
+        	background-image: -webkit-repeating-linear-gradient(135deg, rgba(0,0,0,.3), rgba(0,0,0,.3) 1px, transparent 2px, transparent 2px, rgba(0,0,0,.3) 3px);
+        	background-image: -moz-repeating-linear-gradient(135deg, rgba(0,0,0,.3), rgba(0,0,0,.3) 1px, transparent 2px, transparent 2px, rgba(0,0,0,.3) 3px);
+			background-image: -o-repeating-linear-gradient(135deg, rgba(0,0,0,.3), rgba(0,0,0,.3) 1px, transparent 2px, transparent 2px, rgba(0,0,0,.3) 3px);
+			background-image: repeating-linear-gradient(135deg, rgba(0,0,0,.3), rgba(0,0,0,.3) 1px, transparent 2px, transparent 2px, rgba(0,0,0,.3) 3px);
+			-webkit-background-size: 4px 4px;
+			-moz-background-size: 4px 4px;
+			background-size: 4px 4px;
+        }
+        
+        form { background: transparent;}
+        
+        input[type="text"], input[type="datetime-local"], select { 
+        	
+        	background-color: white;
+        	color: black;
+        	border: 2px solid; 
+        	border-color: white;
+        }
+        
+        input[type="text"]:focus, input[type="datetime-local"]:focus, select:focus { 
+        	
+        	background-color: white;
+        	color: red;
+        	border: 2px solid; 
+        	border-color: red;
+        }
+        
+        input[type="submit"] {
+        
+        	background: red;
+        	border: 2px solid; 
+        	border-color: red; 
+        	color: white;
+			border-top-left-radius: 50px 50px;
+        	border-bottom-left-radius: 50px 50px;
+        	border-top-right-radius: 50px 50px;
+        	border-bottom-right-radius: 50px 50px;
+        }
+        
+        input[type="submit"]:hover,
+        input[type="submit"]:focus { background: white; border: 2px solid; border-color: red; color: red; }
+    </style>
+    <apex:form >
+        <apex:pageMessages />
+    	<apex:pageBlock title="Reserve Seats">
+            <!-- Put the poster image in the center of the page -->
+            <div align="center">
+                <apex:image value="{!urlPoster}" width="250"/><br/>
+            </div>
+            
+            <!-- Showtime details in addition to input fields for the reservation -->
+            <apex:pageBlockSection >
+                <apex:outputField value="{!show.Movie__r.Name}"/>
+                <apex:outputField value="{!show.Movie__r.Description__c}"/>
+                <apex:outputField value="{!show.Theater__r.Cinema__r.Name}"/>
+                <apex:outputField value="{!show.Theater__r.Name}"/>
+                <apex:inputText label="Name for Reservation: " value="{!reserve.ReservationName__c}" tabIndex="1"/>
+            	<apex:inputText label="Number of Seats: " value="{!reserve.Quantity__c}" tabIndex="2"/>
+            </apex:pageBlockSection>
+            
+            <!-- Typical Navigation Buttons -->
+            <div align="center">
+            	<apex:commandButton style="margin-right: 150px;" action="{!cancel}" value="Cancel" tabIndex="4"/>
+            	<apex:commandButton action="{!save}" value="Save" tabIndex="3"/> 
+            </div>
+        </apex:pageBlock>
+    </apex:form>
+</apex:page>

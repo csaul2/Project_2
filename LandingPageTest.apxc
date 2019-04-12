@@ -1,0 +1,69 @@
+@isTest(SeeAllData=true)
+public class LandingPageTest {
+    @isTest static void testCinemaList() {
+        PageReference pageRef = Page.TimLandingPage;
+        
+        FindShowTimes control = new FindShowTimes();
+        
+        control.cinema = '';
+        control.movieTitle = 'cap';
+        control.showDateTimeEndingIn = DateTime.now();
+        
+        List<SelectOption> output = new List<SelectOption>();
+        output.add(new SelectOption('', 'Choose a cinema', false));
+        
+        for (Cinema__c cinemaOption: [SELECT Name FROM Cinema__c ORDER BY Name ASC]) {
+            output.add(new SelectOption(cinemaOption.Name, cinemaOption.Name, false));
+        }
+        
+        List<SelectOption> results = control.getCinemaPicklist();
+        
+        System.assertEquals(output, results);
+    }
+    
+    @isTest static void testSearchSuccess() {
+        PageReference pageRef = Page.TimLandingPage;
+        
+        FindShowTimes control = new FindShowTimes();
+        
+        control.cinema = '';
+        control.movieTitle = 'cap';
+        control.showDateTimeEndingIn = DateTime.now();
+        
+        PageReference out = control.triggerSearch();
+        
+        // Parse the time based stuff off as they won't be called at the same time
+        String stringUrl = out.getUrl();
+        List<String> parsedUrl = stringUrl.split('\\?');
+        
+        System.assertEquals(Page.Display3Page.getUrl(), parsedUrl[0]);
+    }
+    
+    @isTest static void testStartNull() {
+        PageReference pageRef = Page.TimLandingPage;
+        
+        FindShowTimes control = new FindShowTimes();
+        
+        control.cinema = '';
+        control.movieTitle = 'cap';
+        control.showDateTimeEndingIn = DateTime.now();
+        control.showDateTimeBeginningIn = null;
+        
+        PageReference out = control.triggerSearch();
+    }
+    
+    @isTest static void testWrongDateOrder() {
+        PageReference pageRef = Page.TimLandingPage;
+        
+        FindShowTimes control = new FindShowTimes();
+        
+        control.cinema = '';
+        control.movieTitle = 'cap';
+        control.showDateTimeBeginningIn = DateTime.now().addDays(1);
+        control.showDateTimeEndingIn = DateTime.now();
+        
+        PageReference out = control.triggerSearch();
+        
+        System.assertEquals(null, out);
+    }
+}

@@ -1,0 +1,72 @@
+public class ReservationTriggerMethods {
+    public static void checkCapacity(List<Reservation__c> newReservations) {
+        // pull set of showtime IDs from set of newReservations
+        Set<Id> newReservationShowtimeIDs = new Set<ID>();
+        for (Reservation__c r : newReservations) {
+            newReservationShowtimeIDs.add(r.Showtime__c);
+        } // end creation of set of showtime IDs
+        
+        // pull showtimes from DB whose IDs are in set of IDs from newReservations
+        List<Showtime__c> showtimeRecords = [
+            SELECT 
+            	Id, RemainingSeats__c, ReservedSeats__c 
+            FROM 
+            	Showtime__c 
+            WHERE 
+            	Id IN :newReservationShowtimeIDs
+        ]; // end showtime record query
+        
+        // throw an error if the query returns nothing?
+        
+        // make map from results to for easy referral to showtime by ID
+        Map<Id, Showtime__c> showtimeMap = new Map<Id, Showtime__c>();
+        if (!showtimeRecords.isEmpty()){
+            for (Showtime__c s : showtimeRecords) {
+                showtimeMap.put(s.Id, s);
+            }
+        } // end empty query precaution
+            
+        
+        // iterate through newReservations and check RemainingSeats on associated Showtime
+        // if there are enough seats, update ReservedSeats
+        // if there aren't enough seats, throw error
+        
+        Set<Id> showtimesToUpdateIDs = new Set<Id>();
+        //Showtime__c s;
+        for (Reservation__C r : newReservations) {
+            // check if a showtime was queried that corresponds to the reservation
+            if (!showtimeMap.containsKey(r.Showtime__c)) {
+                // if not, throw error
+                r.addError('Either no Showtime has been selected or the selected Showtime is invalid.');
+            } else {
+                // otherwise, check to see if there enough remaining seats for that showtime
+                //s = showtimeMap.get(r.Showtime__c);
+                if (r.Quantity__C <= showtimeMap.get(r.Showtime__c).RemainingSeats__c) {
+                    // if so, update reservedSeats field
+                    // and add showtimeID to the list of showtimes to update
+                    showtimeMap.get(r.Showtime__c).ReservedSeats__c += r.Quantity__c;
+                    showtimesToUpdateIDs.add(showtimeMap.get(r.Showtime__c).Id);
+                } else {
+                    // otherwise throw error
+                    r.addError('You may not reserve that many seats for this showtime. Only ' + showtimeMap.get(r.Showtime__c).RemainingSeats__c + ' seats are available.');
+                } // end remaining seat check
+            } // end missing showtime precaution
+        } // end reservation loop
+        
+        
+        if (!showtimesToUpdateIDs.isEmpty()) {
+            List<Showtime__c> showtimesToUpdate = new List<Showtime__c>();
+        
+            // loop through set of showtimeIDs and add Showtime records to list to be updated in DB
+            for (Id showtimeID : showtimesToUpdateIDs) {
+                showtimesToUpdate.add(showtimeMap.get(showtimeID));
+            } // end showtimesToUpdate compilation from IDs set
+            
+            try {
+                update showtimesToUpdate;
+            } catch (Exception e) {
+                System.debug('An ERROR has occurred: ' + e.getMessage());
+            }
+        } // end empty update List precaution
+    } // end checkCapacity method
+}

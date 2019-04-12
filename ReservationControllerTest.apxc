@@ -1,0 +1,52 @@
+@isTest(SeeAllData=true) 
+public class ReservationControllerTest {
+    @isTest static void testSavePositive() {
+        PageReference pageRef = Page.ReservationPage;
+        
+        // Find showtime with Id to set the context of the page
+        Showtime__c showtime = [SELECT Id FROM Showtime__c LIMIT 1];
+        pageRef.getParameters().put('showtimeId', (String)showtime.Id);
+        Test.setCurrentPage(pageRef);
+
+        ReservationController control = new ReservationController();
+        control.reserve.ReservationName__c = 'Chris';
+        control.reserve.Quantity__c = 2;
+        
+        // Test valid insertion
+        PageReference success = control.save();
+        System.assertEquals(Page.TimLandingPage.getUrl(), success.getUrl());
+    }
+    
+    @isTest static void testSaveNegative() {
+        PageReference pageRef = Page.ReservationPage;
+        Showtime__c showtime = [SELECT Id FROM Showtime__c LIMIT 1];
+        pageRef.getParameters().put('showtimeId', (String)showtime.Id);
+        Test.setCurrentPage(pageRef);
+
+        ReservationController control = new ReservationController();
+        control.reserve.ReservationName__c = 'Chris';
+        control.reserve.Quantity__c = 2;
+        
+        // Run valid insertion
+        PageReference success = control.save();
+        
+        // Insert same object to cause a DML Exception and test those lines
+        PageReference fail = control.save();
+        System.assertEquals(null, fail);
+    }
+    
+    @isTest static void testCancel() {
+        PageReference pageRef = Page.ReservationPage;
+        Showtime__c showtime = [SELECT Id FROM Showtime__c LIMIT 1];
+        pageRef.getParameters().put('showtimeId', (String)showtime.Id);
+        Test.setCurrentPage(pageRef);
+
+        ReservationController control = new ReservationController();
+        control.reserve.ReservationName__c = 'Chris';
+        control.reserve.Quantity__c = 2;
+        
+        // Test cancel button
+        PageReference can = control.cancel();
+        System.assertEquals(Page.TimLandingPage.getUrl(), can.getUrl());
+    }
+}
