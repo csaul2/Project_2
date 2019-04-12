@@ -1,0 +1,667 @@
+public class FindShowTimes {
+	
+    //global variables
+    public String cinema {get; set;}
+    public String movieTitle {get; set;}
+    public DateTime showDateTimeBeginningIn {get; set;}
+    public DateTime showDateTimeEndingIn {get; set;}
+    public String triggerSearch;
+    
+    //Create picklist of cinemas
+    public List<SelectOption> getCinemaPicklist() {
+        
+        List<SelectOption> output = new List<SelectOption>();
+        
+        output.add(new SelectOption('Choose cinema', 'Choose cinema', false));
+        
+        try {
+            
+            for (Cinema__c cinemaOption: [SELECT Name FROM Cinema__c ORDER BY Name ASC]) {
+                
+                output.add(new SelectOption(cinemaOption.Name, cinemaOption.Name, false));
+            }
+        } catch (Exception e) {
+            
+            System.debug('An expected database error has occurred: ' + e.getMessage());
+        }
+        
+        return output;
+    }
+    
+    public void triggerSearch() {
+        
+        this.triggerSearch = 'Search';
+    }
+    
+    //First search combination
+    //Search by movies only
+    public Integer getSearchRecordsByMovies() {
+        
+        Integer output = 0;
+        
+        if (this.triggerSearch == 'Search') {
+        
+            if (this.cinema == 'Choose cinema' && this.movieTitle != '' && this.showDateTimeBeginningIn == null && this.showDateTimeEndingIn == null) {
+
+                try {
+                    
+                    Movie__c prepareMovieTitle = new Movie__c(Name = this.movieTitle + '%');
+
+                    for (Movie__c movieSearch: [SELECT Name, Poster__c, Description__c, (SELECT StartTime__c, Theater__r.Cinema__r.Name, Theater__r.Name FROM Showtimes__r ORDER BY StartTime__c ASC) FROM Movie__c WHERE Name LIKE :prepareMovieTitle.Name ORDER BY Name ASC]) {
+                        
+                        output++;
+                    }
+                } catch (DMLException e) {
+                
+                    output = 0;
+                }                
+            }
+        }
+        
+        return output;
+    }
+    
+    //First search combination
+    //Search by movies only
+    public String getSearchResultsByMovies() {
+        
+        String output = '';
+        String showTimes = '';
+        
+        if (this.triggerSearch == 'Search') {
+        
+            if (this.cinema == 'Choose cinema' && this.movieTitle != '' && this.showDateTimeBeginningIn == null && this.showDateTimeEndingIn == null) {
+
+                if (this.getSearchRecordsByMovies() > 0) {
+                    
+                    try {
+                    
+                        Movie__c prepareMovieTitle = new Movie__c(Name = this.movieTitle + '%');
+
+                        for (Movie__c movieSearch: [SELECT Name, Poster__c, Description__c, (SELECT StartTime__c, Theater__r.Cinema__r.Name, Theater__r.Name FROM Showtimes__r ORDER BY StartTime__c ASC) FROM Movie__c WHERE Name LIKE :prepareMovieTitle.Name ORDER BY Name ASC]) {
+							
+                            showTimes = '';
+                            
+                            output += '<div style="color: #ffffb3"><br /><br /><b>' + movieSearch.Name + '</b><br /><br /></div>';
+
+							if (movieSearch.Poster__c != null) {
+								
+								output += '<div style="color: white"><br /><br />' + movieSearch.Poster__c + '<br /><br /></div>';
+                            }
+							
+							if (movieSearch.Description__c != null) {
+								
+								output += '<div style="color: white"><br /><br />' + movieSearch.Description__c + '<br /><br /></div>';
+                            }
+							
+                            for (Showtime__c showtimeSearch: movieSearch.Showtimes__r) {
+                    			
+                                if (showtimeSearch.StartTime__c != null && showtimeSearch.Theater__r.Cinema__r.Name != '') {
+                                	
+                                    showTimes += '<div style="color: white">Show time: ' + String.valueOf(showtimeSearch.StartTime__c.format('MM/dd/yyyy hh:mm a')) + ' EST</div>';
+                                	showTimes += '<div style="color: white">Location: ' + showtimeSearch.Theater__r.Cinema__r.Name + '<br /><br /></div>';
+                                }
+                            }
+                            
+                            if (showTimes == '') {
+                                
+                                output += '<div style="color: white">Sorry, no results are available for showtimes and locations.</div>';
+                            } else {
+                                
+                                output += showTimes;
+                            }
+                        }
+                    } catch (DMLException e) {
+                
+                        System.debug('An expected database error has occurred: ' + e.getMessage());
+                    }                    
+                } else {
+                    
+					output = '<div style="color: #ff8080">Sorry, but your search returned no results for "' + this.movieTitle + '".  Try a different spelling for your movie title, and/or broaden your search criteria.</div>';                    
+                }               
+            }
+        }
+        
+        return output;
+    }
+    
+    //Second search combination
+    //Search by time only
+    public Integer getSearchRecordsByTime() {
+        
+        Integer output = 0;
+        
+        if (this.triggerSearch == 'Search') {
+        
+            if (this.cinema == 'Choose cinema' && this.movieTitle == '' && this.showDateTimeBeginningIn != null && this.showDateTimeEndingIn != null) {
+
+                try {
+                    
+                    for (Movie__c movieSearch: [SELECT Name, Poster__c, Description__c, (SELECT StartTime__c, Theater__r.Cinema__r.Name, Theater__r.Name FROM Showtimes__r WHERE StartTime__c >= :this.showDateTimeBeginningIn AND StartTime__c <= :this.showDateTimeEndingIn ORDER BY StartTime__c ASC) FROM Movie__c ORDER BY Name ASC]) {
+                        
+                        output++;
+                    }
+                } catch (DMLException e) {
+                
+                    output = 0;
+                }                
+            }
+        }
+        
+        return output;
+    }
+    
+    //Second search combination
+    //Search by time only
+    public String getSearchResultsByTime() {
+        
+        String output = '';
+        String showTimes = '';
+        
+        if (this.triggerSearch == 'Search') {
+        
+            if (this.cinema == 'Choose cinema' && this.movieTitle == '' && this.showDateTimeBeginningIn != null && this.showDateTimeEndingIn != null) {
+
+                if (this.getSearchRecordsByTime() > 0) {
+
+                    try {
+
+                        for (Movie__c movieSearch: [SELECT Name, Poster__c, Description__c, (SELECT StartTime__c, Theater__r.Cinema__r.Name, Theater__r.Name FROM Showtimes__r WHERE StartTime__c >= :this.showDateTimeBeginningIn AND StartTime__c <= :this.showDateTimeEndingIn ORDER BY StartTime__c ASC) FROM Movie__c ORDER BY Name ASC]) {
+							
+                            showTimes = '';
+                            
+                            output += '<div style="color: #ffffb3"><br /><br /><b>' + movieSearch.Name + '</b><br /><br /></div>';
+
+							if (movieSearch.Poster__c != null) {
+								
+								output += '<div style="color: white"><br /><br />' + movieSearch.Poster__c + '<br /><br /></div>';
+                            }
+							
+							if (movieSearch.Description__c != null) {
+								
+								output += '<div style="color: white"><br /><br />' + movieSearch.Description__c + '<br /><br /></div>';
+                            }
+                            
+                            for (Showtime__c showtimeSearch: movieSearch.Showtimes__r) {
+                    			
+                                if (showtimeSearch.StartTime__c != null && showtimeSearch.Theater__r.Cinema__r.Name != '') {
+                                	
+                                    showTimes += '<div style="color: white">Show time: ' + String.valueOf(showtimeSearch.StartTime__c.format('MM/dd/yyyy hh:mm a')) + ' EST</div>';
+                                	showTimes += '<div style="color: white">Location: ' + showtimeSearch.Theater__r.Cinema__r.Name + '<br /><br /></div>';
+                                }
+                            }
+                            
+                            if (showTimes == '') {
+                                
+                                output += '<div style="color: white">Sorry, no results are available for showtimes and locations.</div>';
+                            } else {
+                                
+                                output += showTimes;
+                            }
+                        }
+                    } catch (DMLException e) {
+                
+                        System.debug('An expected database error has occurred: ' + e.getMessage());
+                    }                    
+                } else {
+                    
+					output = '<div style="color: #ff8080">Sorry, but your search returned no results for "' + this.movieTitle + '".  Try a different spelling for your movie title, and/or broaden your search criteria.</div>';                    
+                }               
+            }
+        }
+        
+        return output;
+    }
+    
+    //Third search combination
+    //Search by location only
+    public Integer getSearchRecordsByLocation() {
+        
+        Integer output = 0;
+        
+        if (this.triggerSearch == 'Search') {
+        
+            if (this.cinema != 'Choose cinema' && this.movieTitle == '' && this.showDateTimeBeginningIn == null && this.showDateTimeEndingIn == null) {
+
+                try {
+                    
+                    for (Movie__c movieSearch: [SELECT Name, Poster__c, Description__c, (SELECT StartTime__c, Theater__r.Cinema__r.Name, Theater__r.Name FROM Showtimes__r WHERE Theater__r.Cinema__r.Name = :this.cinema ORDER BY StartTime__c ASC) FROM Movie__c ORDER BY Name ASC]) {
+                        
+                        output++;
+                    }
+                } catch (DMLException e) {
+                
+                    output = 0;
+                }                
+            }
+        }
+        
+        return output;
+    }
+    
+    //Third search combination
+    //Search by location only
+    public String getSearchResultsByLocation() {
+        
+        String output = '';
+        String showTimes = '';
+        
+        if (this.triggerSearch == 'Search') {
+        
+            if (this.cinema != 'Choose cinema' && this.movieTitle == '' && this.showDateTimeBeginningIn == null && this.showDateTimeEndingIn == null) {
+
+                if (this.getSearchRecordsByLocation() > 0) {
+
+                    try {
+
+                        for (Movie__c movieSearch: [SELECT Name, Poster__c, Description__c, (SELECT StartTime__c, Theater__r.Cinema__r.Name, Theater__r.Name FROM Showtimes__r WHERE Theater__r.Cinema__r.Name = :this.cinema ORDER BY StartTime__c ASC) FROM Movie__c ORDER BY Name ASC]) {
+							
+                            showTimes = '';
+                            
+                            output += '<div style="color: #ffffb3"><br /><br /><b>' + movieSearch.Name + '</b><br /><br /></div>';
+
+							if (movieSearch.Poster__c != null) {
+								
+								output += '<div style="color: white"><br /><br />' + movieSearch.Poster__c + '<br /><br /></div>';
+                            }
+							
+							if (movieSearch.Description__c != null) {
+								
+								output += '<div style="color: white"><br /><br />' + movieSearch.Description__c + '<br /><br /></div>';
+                            }
+                            
+                            for (Showtime__c showtimeSearch: movieSearch.Showtimes__r) {
+                    			
+                                if (showtimeSearch.StartTime__c != null && showtimeSearch.Theater__r.Cinema__r.Name != '') {
+                                	
+                                    showTimes += '<div style="color: white">Show time: ' + String.valueOf(showtimeSearch.StartTime__c.format('MM/dd/yyyy hh:mm a')) + ' EST</div>';
+                                	showTimes += '<div style="color: white">Location: ' + showtimeSearch.Theater__r.Cinema__r.Name + '<br /><br /></div>';
+                                }
+                            }
+                            
+                            if (showTimes == '') {
+                                
+                                output += '<div style="color: white">Sorry, no results are available for showtimes and locations.</div>';
+                            } else {
+                                
+                                output += showTimes;
+                            }
+                        }
+                    } catch (DMLException e) {
+                
+                        System.debug('An expected database error has occurred: ' + e.getMessage());
+                    }                    
+                } else {
+                    
+					output = '<div style="color: #ff8080">Sorry, but your search returned no results for "' + this.movieTitle + '".  Try a different spelling for your movie title, and/or broaden your search criteria.</div>';                    
+                }               
+            }
+        }
+        
+        return output;
+    }
+    
+    //Fourth search combination
+    //Search by movies and time only
+    public Integer getSearchRecordsByMoviesAndTime() {
+        
+        Integer output = 0;
+        
+        if (this.triggerSearch == 'Search') {
+        
+            if (this.cinema == 'Choose cinema' && this.movieTitle != '' && this.showDateTimeBeginningIn != null && this.showDateTimeEndingIn != null) {
+
+                try {
+                    
+                    Movie__c prepareMovieTitle = new Movie__c(Name = this.movieTitle + '%');
+
+                    for (Movie__c movieSearch: [SELECT Name, Poster__c, Description__c, (SELECT StartTime__c, Theater__r.Cinema__r.Name, Theater__r.Name FROM Showtimes__r WHERE StartTime__c >= :this.showDateTimeBeginningIn AND StartTime__c <= :this.showDateTimeEndingIn ORDER BY StartTime__c ASC) FROM Movie__c WHERE Name LIKE :prepareMovieTitle.Name ORDER BY Name ASC]) {
+                        
+                        output++;
+                    }
+                } catch (DMLException e) {
+                
+                    output = 0;
+                }                
+            }
+        }
+        
+        return output;
+    }
+    
+    //Fourth search combination
+    //Search by movies and time only
+    public String getSearchResultsByMoviesAndTime() {
+        
+        String output = '';
+        String showTimes = '';
+        
+        if (this.triggerSearch == 'Search') {
+        
+            if (this.cinema == 'Choose cinema' && this.movieTitle != '' && this.showDateTimeBeginningIn != null && this.showDateTimeEndingIn != null) {
+
+                if (this.getSearchRecordsByMoviesAndTime() > 0) {
+
+                    try {
+                    
+                        Movie__c prepareMovieTitle = new Movie__c(Name = this.movieTitle + '%');
+
+                        for (Movie__c movieSearch: [SELECT Name, Poster__c, Description__c, (SELECT StartTime__c, Theater__r.Cinema__r.Name, Theater__r.Name FROM Showtimes__r WHERE StartTime__c >= :this.showDateTimeBeginningIn AND StartTime__c <= :this.showDateTimeEndingIn ORDER BY StartTime__c ASC) FROM Movie__c WHERE Name LIKE :prepareMovieTitle.Name ORDER BY Name ASC]) {
+							
+                            showTimes = '';
+                            
+                            output += '<div style="color: #ffffb3"><br /><br /><b>' + movieSearch.Name + '</b><br /><br /></div>';
+
+							if (movieSearch.Poster__c != null) {
+								
+								output += '<div style="color: white"><br /><br />' + movieSearch.Poster__c + '<br /><br /></div>';
+                            }
+							
+							if (movieSearch.Description__c != null) {
+								
+								output += '<div style="color: white"><br /><br />' + movieSearch.Description__c + '<br /><br /></div>';
+                            }
+                            
+                            for (Showtime__c showtimeSearch: movieSearch.Showtimes__r) {
+                    			
+                                if (showtimeSearch.StartTime__c != null && showtimeSearch.Theater__r.Cinema__r.Name != '') {
+                                	
+                                    showTimes += '<div style="color: white">Show time: ' + String.valueOf(showtimeSearch.StartTime__c.format('MM/dd/yyyy hh:mm a')) + ' EST</div>';
+                                	showTimes += '<div style="color: white">Location: ' + showtimeSearch.Theater__r.Cinema__r.Name + '<br /><br /></div>';
+                                }
+                            }
+                            
+                            if (showTimes == '') {
+                                
+                                output += '<div style="color: white">Sorry, no results are available for showtimes and locations.</div>';
+                            } else {
+                                
+                                output += showTimes;
+                            }
+                        }
+                    } catch (DMLException e) {
+                
+                        System.debug('An expected database error has occurred: ' + e.getMessage());
+                    }                    
+                } else {
+                    
+					output = '<div style="color: #ff8080">Sorry, but your search returned no results for "' + this.movieTitle + '".  Try a different spelling for your movie title, and/or broaden your search criteria.</div>';                    
+                }               
+            }
+        }
+        
+        return output;
+    }
+    
+    //Fifth search combination
+    //Search by time and location only
+    public Integer getSearchRecordsByTimeAndLocation() {
+        
+        Integer output = 0;
+        
+        if (this.triggerSearch == 'Search') {
+        
+            if (this.cinema != 'Choose cinema' && this.movieTitle == '' && this.showDateTimeBeginningIn != null && this.showDateTimeEndingIn != null) {
+
+                try {
+
+                    for (Movie__c movieSearch: [SELECT Name, Poster__c, Description__c, (SELECT StartTime__c, Theater__r.Cinema__r.Name, Theater__r.Name FROM Showtimes__r WHERE StartTime__c >= :this.showDateTimeBeginningIn AND StartTime__c <= :this.showDateTimeEndingIn AND Theater__r.Cinema__r.Name = :this.cinema ORDER BY StartTime__c ASC) FROM Movie__c ORDER BY Name ASC]) {
+                        
+                        output++;
+                    }
+                } catch (DMLException e) {
+                
+                    output = 0;
+                }                
+            }
+        }
+        
+        return output;
+    }
+    
+    //Fifth search combination
+    //Search by time and location only 
+    public String getSearchResultsByTimeAndLocation() {
+        
+        String output = '';
+        String showTimes = '';
+        
+        if (this.triggerSearch == 'Search') {
+        
+            if (this.cinema != 'Choose cinema' && this.movieTitle == '' && this.showDateTimeBeginningIn != null && this.showDateTimeEndingIn != null) {
+
+                if (this.getSearchRecordsByTimeAndLocation() > 0) {
+
+                    try {
+
+                        for (Movie__c movieSearch: [SELECT Name, Poster__c, Description__c, (SELECT StartTime__c, Theater__r.Cinema__r.Name, Theater__r.Name FROM Showtimes__r WHERE StartTime__c >= :this.showDateTimeBeginningIn AND StartTime__c <= :this.showDateTimeEndingIn AND Theater__r.Cinema__r.Name = :this.cinema ORDER BY StartTime__c ASC) FROM Movie__c ORDER BY Name ASC]) {
+							
+                            showTimes = '';
+                            
+                            output += '<div style="color: #ffffb3"><br /><br /><b>' + movieSearch.Name + '</b><br /><br /></div>';
+
+							if (movieSearch.Poster__c != null) {
+								
+								output += '<div style="color: white"><br /><br />' + movieSearch.Poster__c + '<br /><br /></div>';
+                            }
+							
+							if (movieSearch.Description__c != null) {
+								
+								output += '<div style="color: white"><br /><br />' + movieSearch.Description__c + '<br /><br /></div>';
+                            }
+                            
+                            for (Showtime__c showtimeSearch: movieSearch.Showtimes__r) {
+                    			
+                                if (showtimeSearch.StartTime__c != null && showtimeSearch.Theater__r.Cinema__r.Name != '') {
+                                	
+                                    showTimes += '<div style="color: white">Show time: ' + String.valueOf(showtimeSearch.StartTime__c.format('MM/dd/yyyy hh:mm a')) + ' EST</div>';
+                                	showTimes += '<div style="color: white">Location: ' + showtimeSearch.Theater__r.Cinema__r.Name + '<br /><br /></div>';
+                                }
+                            }
+                            
+                            if (showTimes == '') {
+                                
+                                output += '<div style="color: white">Sorry, no results are available for showtimes and locations.</div>';
+                            } else {
+                                
+                                output += showTimes;
+                            }
+                        }
+                    } catch (DMLException e) {
+                        
+                        System.debug('An expected database error has occurred: ' + e.getMessage());
+                    }                    
+                } else {
+                    
+					output = '<div style="color: #ff8080">Sorry, but your search returned no results for "' + this.movieTitle + '".  Try a different spelling for your movie title, and/or broaden your search criteria.</div>';                    
+                }               
+            }
+        }
+        
+        return output;
+    }
+    
+    //Sixth search combination
+    //Search by movies and location only
+    public Integer getSearchRecordsByMoviesAndLocation() {
+        
+        Integer output = 0;
+        
+        if (this.triggerSearch == 'Search') {
+        
+            if (this.cinema != 'Choose cinema' && this.movieTitle != '' && this.showDateTimeBeginningIn == null && this.showDateTimeEndingIn == null) {
+
+                try {
+                    
+                    Movie__c prepareMovieTitle = new Movie__c(Name = this.movieTitle + '%');
+
+                    for (Movie__c movieSearch: [SELECT Name, Poster__c, Description__c, (SELECT StartTime__c, Theater__r.Cinema__r.Name, Theater__r.Name FROM Showtimes__r WHERE Theater__r.Cinema__r.Name = :this.cinema ORDER BY StartTime__c ASC) FROM Movie__c WHERE Name LIKE :prepareMovieTitle.Name ORDER BY Name ASC]) {
+                        
+                        output++;
+                    }
+                } catch (DMLException e) {
+                
+                    output = 0;
+                }                
+            }
+        }
+        
+        return output;
+    }
+    
+    //Sixth search combination
+    //Search by movies and location only 
+    public String getSearchResultsByMoviesAndLocation() {
+        
+        String output = '';
+        String showTimes = '';
+        
+        if (this.triggerSearch == 'Search') {
+        
+            if (this.cinema != 'Choose cinema' && this.movieTitle != '' && this.showDateTimeBeginningIn == null && this.showDateTimeEndingIn == null) {
+
+                if (this.getSearchRecordsByMoviesAndLocation() > 0) {
+
+                    try {
+                        
+                        Movie__c prepareMovieTitle = new Movie__c(Name = this.movieTitle + '%');
+
+                        for (Movie__c movieSearch: [SELECT Name, Poster__c, Description__c, (SELECT StartTime__c, Theater__r.Cinema__r.Name, Theater__r.Name FROM Showtimes__r WHERE Theater__r.Cinema__r.Name = :this.cinema ORDER BY StartTime__c ASC) FROM Movie__c WHERE Name LIKE :prepareMovieTitle.Name ORDER BY Name ASC]) {
+							
+                            showTimes = '';
+                            
+                            output += '<div style="color: #ffffb3"><br /><br /><b>' + movieSearch.Name + '</b><br /><br /></div>';
+
+							if (movieSearch.Poster__c != null) {
+								
+								output += '<div style="color: white"><br /><br />' + movieSearch.Poster__c + '<br /><br /></div>';
+                            }
+							
+							if (movieSearch.Description__c != null) {
+								
+								output += '<div style="color: white"><br /><br />' + movieSearch.Description__c + '<br /><br /></div>';
+                            }
+                            
+                            for (Showtime__c showtimeSearch: movieSearch.Showtimes__r) {
+                    			
+                                if (showtimeSearch.StartTime__c != null && showtimeSearch.Theater__r.Cinema__r.Name != '') {
+                                	
+                                    showTimes += '<div style="color: white">Show time: ' + String.valueOf(showtimeSearch.StartTime__c.format('MM/dd/yyyy hh:mm a')) + ' EST</div>';
+                                	showTimes += '<div style="color: white">Location: ' + showtimeSearch.Theater__r.Cinema__r.Name + '<br /><br /></div>';
+                                }
+                            }
+                            
+                            if (showTimes == '') {
+                                
+                                output += '<div style="color: white">Sorry, no results are available for showtimes and locations.</div>';
+                            } else {
+                                
+                                output += showTimes;
+                            }
+                        }
+                    } catch (DMLException e) {
+                        
+                        System.debug('An expected database error has occurred: ' + e.getMessage());
+                    }                    
+                } else {
+                    
+					output = '<div style="color: #ff8080">Sorry, but your search returned no results for "' + this.movieTitle + '".  Try a different spelling for your movie title, and/or broaden your search criteria.</div>';                    
+                }               
+            }
+        }
+        
+        return output;
+    }
+    
+    //Seventh search combination
+    //Search by all filters
+    public Integer getSearchRecords() {
+        
+        Integer output = 0;
+        
+        if (this.triggerSearch == 'Search') {
+        
+            if (this.cinema != 'Choose cinema' && this.movieTitle != '' && this.showDateTimeBeginningIn != null && this.showDateTimeEndingIn != null) {
+
+                try {
+                    
+                    Movie__c prepareMovieTitle = new Movie__c(Name = this.movieTitle + '%');
+
+                    for (Movie__c movieSearch: [SELECT Name, Poster__c, Description__c, (SELECT StartTime__c, Theater__r.Cinema__r.Name, Theater__r.Name FROM Showtimes__r WHERE StartTime__c >= :this.showDateTimeBeginningIn AND StartTime__c <= :this.showDateTimeEndingIn AND Theater__r.Cinema__r.Name = :this.cinema ORDER BY StartTime__c ASC) FROM Movie__c WHERE Name LIKE :prepareMovieTitle.Name ORDER BY Name ASC]) {
+                        
+                        output++;
+                    }
+                } catch (DMLException e) {
+                
+                    output = 0;
+                }                
+            }
+        }
+        
+        return output;
+    }
+    
+    //Seventh search combination
+    //Search by all filters 
+    public String getSearchResults() {
+        
+        String output = '';
+        String showTimes = '';
+        
+        if (this.triggerSearch == 'Search') {
+        
+            if (this.cinema != 'Choose cinema' && this.movieTitle != '' && this.showDateTimeBeginningIn != null && this.showDateTimeEndingIn != null) {
+
+                if (this.getSearchRecords() > 0) {
+
+                    try {
+                    
+                        Movie__c prepareMovieTitle = new Movie__c(Name = this.movieTitle + '%');
+
+                        for (Movie__c movieSearch: [SELECT Name, Poster__c, Description__c, (SELECT StartTime__c, Theater__r.Cinema__r.Name, Theater__r.Name FROM Showtimes__r WHERE StartTime__c >= :this.showDateTimeBeginningIn AND StartTime__c <= :this.showDateTimeEndingIn AND Theater__r.Cinema__r.Name = :this.cinema ORDER BY StartTime__c ASC) FROM Movie__c WHERE Name LIKE :prepareMovieTitle.Name ORDER BY Name ASC]) {
+							
+                            showTimes = '';
+                            
+                            output += '<div style="color: #ffffb3"><br /><br /><b>' + movieSearch.Name + '</b><br /><br /></div>';
+							
+							if (movieSearch.Poster__c != null) {
+								
+								output += '<div style="color: white"><br /><br />' + movieSearch.Poster__c + '<br /><br /></div>';
+                            }
+							
+							if (movieSearch.Description__c != null) {
+								
+								output += '<div style="color: white"><br /><br />' + movieSearch.Description__c + '<br /><br /></div>';
+                            }
+							
+                            for (Showtime__c showtimeSearch: movieSearch.Showtimes__r) {
+                    			
+                                if (showtimeSearch.StartTime__c != null && showtimeSearch.Theater__r.Cinema__r.Name != '') {
+                                	
+                                    showTimes += '<div style="color: white">Show time: ' + String.valueOf(showtimeSearch.StartTime__c.format('MM/dd/yyyy hh:mm a')) + ' EST</div>';
+                                	showTimes += '<div style="color: white">Location: ' + showtimeSearch.Theater__r.Cinema__r.Name + '<br /><br /></div>';
+                                }
+                            }
+                            
+                            if (showTimes == '') {
+                                
+                                output += '<div style="color: white">Sorry, no results are available for showtimes and locations.</div>';
+                            } else {
+                                
+                                output += showTimes;
+                            }
+                        }
+                    } catch (DMLException e) {
+                
+                        System.debug('An expected database error has occurred: ' + e.getMessage());
+                    }                    
+                } else {
+                    
+					output = '<div style="color: #ff8080">Sorry, but your search returned no results for "' + this.movieTitle + '".  Try a different spelling for your movie title, and/or broaden your search criteria.</div>';                    
+                }               
+            }
+        }
+        
+        return output;
+    }
+}

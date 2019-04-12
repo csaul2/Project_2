@@ -1,0 +1,321 @@
+@istest
+public class FindShowTimesTest {
+    
+    //First search combination
+    //Search by movies only
+    @istest(SeeAllData=true) static void testGetSearchRecordsByMovies() {
+        
+        FindShowTimes showTimes = new FindShowTimes();
+        
+        //Positive
+        showTimes.cinema = 'Choose cinema';
+        showTimes.movieTitle = 'Cheaper';
+        showTimes.showDateTimeBeginningIn = null;
+        showTimes.showDateTimeEndingIn = null;
+        showTimes.triggerSearch = 'Search';
+        
+        System.assertEquals(2, showTimes.getSearchRecordsByMovies());
+        
+        //Negative
+        showTimes.cinema = 'Choose cinema';
+        showTimes.movieTitle = 'Transformers';
+        showTimes.showDateTimeBeginningIn = null;
+        showTimes.showDateTimeEndingIn = null;
+        showTimes.triggerSearch = 'Search';
+        
+        System.assertEquals(0, showTimes.getSearchRecordsByMovies()); 
+    }
+    
+    //First search combination
+    //Search by movies only
+    @istest(SeeAllData=true) static void testGetSearchResultsByMovies() {
+        
+        //Positive
+        String testString = '<div style="color: #ffffb3"><br /><br /><b>Cheaper by the dozen</b><br /><br /></div><div style="color: white">Show time: 04/14/2019 01:30 PM EST</div><div style="color: white">Location: Imax Theater<br /><br /></div><div style="color: white">Show time: 04/15/2019 12:00 PM EST</div><div style="color: white">Location: AMC Theater<br /><br /></div><div style="color: #ffffb3"><br /><br /><b>Cheaper by the dozen 2</b><br /><br /></div><div style="color: white">Show time: 04/14/2019 04:00 PM EST</div><div style="color: white">Location: Imax Theater<br /><br /></div><div style="color: white">Show time: 04/15/2019 03:00 PM EST</div><div style="color: white">Location: Showplace<br /><br /></div>';
+        
+        FindShowTimes showTimes = new FindShowTimes();
+        
+        showTimes.cinema = 'Choose cinema';
+        showTimes.movieTitle = 'Cheaper';
+        showTimes.showDateTimeBeginningIn = null;
+        showTimes.showDateTimeEndingIn = null;
+        showTimes.triggerSearch = 'Search';
+        
+        System.assertEquals(testString, showTimes.getSearchResultsByMovies());
+        
+        //Negative
+        testString = '<div style="color: #ff8080">Sorry, but your search returned no results for "Transformers".  Try a different spelling for your movie title, and/or broaden your search criteria.</div>';
+        
+        showTimes.cinema = 'Choose cinema';
+        showTimes.movieTitle = 'Transformers';
+        showTimes.showDateTimeBeginningIn = null;
+        showTimes.showDateTimeEndingIn = null;
+        showTimes.triggerSearch = 'Search';
+        
+        System.assertEquals(testString, showTimes.getSearchResultsByMovies());        
+    }
+    
+    //Second search combination
+    //Search by time only
+    @istest(SeeAllData=true) static void testGetSearchRecordsByTime() {
+        
+        FindShowTimes showTimes = new FindShowTimes();
+        
+        //Positive
+        showTimes.cinema = 'Choose cinema';
+        showTimes.movieTitle = '';
+        showTimes.showDateTimeBeginningIn = DateTime.valueOf('2019-04-11 05:00:00');
+        showTimes.showDateTimeEndingIn = DateTime.valueOf('2019-04-16 05:00:00');
+        showTimes.triggerSearch = 'Search';
+        
+        System.assertEquals(4, showTimes.getSearchRecordsByTime());
+    }
+    
+    //Second search combination
+    //Search by time only
+    @istest(SeeAllData=true) static void testGetSearchResultsByTime() {
+        
+        //Positive
+        String testString = '<div style="color: #ffffb3"><br /><br /><b>Cheaper by the dozen</b><br /><br /></div><div style="color: white">Show time: 04/14/2019 01:30 PM EST</div><div style="color: white">Location: Imax Theater<br /><br /></div><div style="color: white">Show time: 04/15/2019 12:00 PM EST</div><div style="color: white">Location: AMC Theater<br /><br /></div><div style="color: #ffffb3"><br /><br /><b>Cheaper by the dozen 2</b><br /><br /></div><div style="color: white">Show time: 04/14/2019 04:00 PM EST</div><div style="color: white">Location: Imax Theater<br /><br /></div><div style="color: white">Show time: 04/15/2019 03:00 PM EST</div><div style="color: white">Location: Showplace<br /><br /></div><div style="color: #ffffb3"><br /><br /><b>The Dark Knight</b><br /><br /></div><div style="color: white">Sorry, no results are available for showtimes and locations.</div><div style="color: #ffffb3"><br /><br /><b>The Incredible Hulk</b><br /><br /></div><div style="color: white">Show time: 04/12/2019 08:00 PM EST</div><div style="color: white">Location: Imax Theater<br /><br /></div>';
+        
+        FindShowTimes showTimes = new FindShowTimes();
+        
+        showTimes.cinema = 'Choose cinema';
+        showTimes.movieTitle = '';
+        showTimes.showDateTimeBeginningIn = DateTime.valueOf('2019-04-11 05:00:00');
+        showTimes.showDateTimeEndingIn = DateTime.valueOf('2019-04-16 05:00:00');
+        showTimes.triggerSearch = 'Search';
+        
+        System.assertEquals(testString, showTimes.getSearchResultsByTime()); 
+    }
+    
+    //Third search combination
+    //Search by location only
+    @istest(SeeAllData=true) static void testGetRecordsByLocation() {
+        
+        //Positive
+        FindShowTimes showTimes = new FindShowTimes();
+        
+        showTimes.cinema = 'AMC Theater';
+        showTimes.movieTitle = '';
+        showTimes.showDateTimeBeginningIn = null;
+        showTimes.showDateTimeEndingIn = null;
+        showTimes.triggerSearch = 'Search';
+        
+        System.assertEquals(4, showTimes.getSearchRecordsByLocation());
+    }
+    
+    //Third search combination
+    //Search by location only
+    @istest(SeeAllData=true) static void testGetSearchResultsByLocation() {
+        
+        //Positive
+        String testString = '<div style="color: #ffffb3"><br /><br /><b>Cheaper by the dozen</b><br /><br /></div><div style="color: white">Show time: 04/15/2019 12:00 PM EST</div><div style="color: white">Location: AMC Theater<br /><br /></div><div style="color: #ffffb3"><br /><br /><b>Cheaper by the dozen 2</b><br /><br /></div><div style="color: white">Sorry, no results are available for showtimes and locations.</div><div style="color: #ffffb3"><br /><br /><b>The Dark Knight</b><br /><br /></div><div style="color: white">Sorry, no results are available for showtimes and locations.</div><div style="color: #ffffb3"><br /><br /><b>The Incredible Hulk</b><br /><br /></div><div style="color: white">Sorry, no results are available for showtimes and locations.</div>';
+        
+        FindShowTimes showTimes = new FindShowTimes();
+        
+        showTimes.cinema = 'AMC Theater';
+        showTimes.movieTitle = '';
+        showTimes.showDateTimeBeginningIn = null;
+        showTimes.showDateTimeEndingIn = null;
+        showTimes.triggerSearch = 'Search';
+        
+        System.assertEquals(testString, showTimes.getSearchResultsByLocation());
+    }
+    
+    //Fourth search combination
+    //Search by movies and time only
+    @istest(SeeAllData=true) static void testGetSearchRecordsByMoviesAndTime() {
+        
+        //Positive
+        FindShowTimes showTimes = new FindShowTimes();
+        
+        showTimes.cinema = 'Choose cinema';
+        showTimes.movieTitle = 'Cheaper';
+        showTimes.showDateTimeBeginningIn = DateTime.valueOf('2019-04-11 05:00:00');
+        showTimes.showDateTimeEndingIn = DateTime.valueOf('2019-04-16 05:00:00');
+        showTimes.triggerSearch = 'Search';
+        
+        System.assertEquals(2, showTimes.getSearchRecordsByMoviesAndTime());
+        
+        //Negative        
+        showTimes.cinema = 'Choose cinema';
+        showTimes.movieTitle = 'Transformers';
+        showTimes.showDateTimeBeginningIn = DateTime.valueOf('2019-04-11 05:00:00');
+        showTimes.showDateTimeEndingIn = DateTime.valueOf('2019-04-16 05:00:00');
+        showTimes.triggerSearch = 'Search';
+        
+        System.assertEquals(0, showTimes.getSearchRecordsByMoviesAndTime());
+    }
+    
+    //Fourth search combination
+    //Search by movies and time only
+    @istest(SeeAllData=true) static void testGetSearchResultsByMoviesAndTime() {
+        
+        //Positive
+        String testString = '<div style="color: #ffffb3"><br /><br /><b>Cheaper by the dozen</b><br /><br /></div><div style="color: white">Show time: 04/14/2019 01:30 PM EST</div><div style="color: white">Location: Imax Theater<br /><br /></div><div style="color: white">Show time: 04/15/2019 12:00 PM EST</div><div style="color: white">Location: AMC Theater<br /><br /></div><div style="color: #ffffb3"><br /><br /><b>Cheaper by the dozen 2</b><br /><br /></div><div style="color: white">Show time: 04/14/2019 04:00 PM EST</div><div style="color: white">Location: Imax Theater<br /><br /></div><div style="color: white">Show time: 04/15/2019 03:00 PM EST</div><div style="color: white">Location: Showplace<br /><br /></div>';
+        
+        FindShowTimes showTimes = new FindShowTimes();
+        
+        showTimes.cinema = 'Choose cinema';
+        showTimes.movieTitle = 'Cheaper';
+        showTimes.showDateTimeBeginningIn = DateTime.valueOf('2019-04-11 05:00:00');
+        showTimes.showDateTimeEndingIn = DateTime.valueOf('2019-04-16 05:00:00');
+        showTimes.triggerSearch = 'Search';
+        
+        System.assertEquals(testString, showTimes.getSearchResultsByMoviesAndTime());
+        
+        //Negative
+        testString = '<div style="color: #ff8080">Sorry, but your search returned no results for "Transformers".  Try a different spelling for your movie title, and/or broaden your search criteria.</div>';
+        
+        showTimes.cinema = 'Choose cinema';
+        showTimes.movieTitle = 'Transformers';
+        showTimes.showDateTimeBeginningIn = DateTime.valueOf('2019-04-11 05:00:00');
+        showTimes.showDateTimeEndingIn = DateTime.valueOf('2019-04-16 05:00:00');
+        showTimes.triggerSearch = 'Search';
+        
+        System.assertEquals(testString, showTimes.getSearchResultsByMoviesAndTime());
+    }
+    
+    //Fifth search combination
+    //Search by time and location only
+    @istest(SeeAllData=true) static void testGetSearchRecordsByTimeAndLocation() {
+        
+        //Positive
+        FindShowTimes showTimes = new FindShowTimes();
+        
+        showTimes.cinema = 'AMC Theater';
+        showTimes.movieTitle = '';
+        showTimes.showDateTimeBeginningIn = DateTime.valueOf('2019-04-11 05:00:00');
+        showTimes.showDateTimeEndingIn = DateTime.valueOf('2019-04-16 05:00:00');
+        showTimes.triggerSearch = 'Search';
+        
+        System.assertEquals(4, showTimes.getSearchRecordsByTimeAndLocation());
+    }
+    
+    //Fifth search combination
+    //Search by time and location only
+    @istest(SeeAllData=true) static void testGetSearchResultsByTimeAndLocation() {
+        
+        //Positive
+        String testString = '<div style="color: #ffffb3"><br /><br /><b>Cheaper by the dozen</b><br /><br /></div><div style="color: white">Show time: 04/15/2019 12:00 PM EST</div><div style="color: white">Location: AMC Theater<br /><br /></div><div style="color: #ffffb3"><br /><br /><b>Cheaper by the dozen 2</b><br /><br /></div><div style="color: white">Sorry, no results are available for showtimes and locations.</div><div style="color: #ffffb3"><br /><br /><b>The Dark Knight</b><br /><br /></div><div style="color: white">Sorry, no results are available for showtimes and locations.</div><div style="color: #ffffb3"><br /><br /><b>The Incredible Hulk</b><br /><br /></div><div style="color: white">Sorry, no results are available for showtimes and locations.</div>';
+        
+        FindShowTimes showTimes = new FindShowTimes();
+        
+        showTimes.cinema = 'AMC Theater';
+        showTimes.movieTitle = '';
+        showTimes.showDateTimeBeginningIn = DateTime.valueOf('2019-04-11 05:00:00');
+        showTimes.showDateTimeEndingIn = DateTime.valueOf('2019-04-16 05:00:00');
+        showTimes.triggerSearch = 'Search';
+        
+        System.assertEquals(testString, showTimes.getSearchResultsByTimeAndLocation());
+    }
+    
+    //Sixth search combination
+    //Search by movies and location only
+    @istest(SeeAllData=true) static void testGetSearchRecordsByMoviesAndLocation() {
+        
+        //Positive
+        FindShowTimes showTimes = new FindShowTimes();
+        
+        showTimes.cinema = 'AMC Theater';
+        showTimes.movieTitle = 'Cheaper';
+        showTimes.showDateTimeBeginningIn = null;
+        showTimes.showDateTimeEndingIn = null;
+        showTimes.triggerSearch = 'Search';
+        
+        System.assertEquals(2, showTimes.getSearchRecordsByMoviesAndLocation());
+        
+        //Negative
+        showTimes.cinema = 'AMC Theater';
+        showTimes.movieTitle = 'Transformers';
+        showTimes.showDateTimeBeginningIn = null;
+        showTimes.showDateTimeEndingIn = null;
+        showTimes.triggerSearch = 'Search';
+        
+        System.assertEquals(0, showTimes.getSearchRecordsByMoviesAndLocation());
+    }
+    
+    //Sixth search combination
+    //Search by movies and location only
+    @istest(SeeAllData=true) static void testGetSearchResultsByMoviesAndLocation() {
+        
+        //Positive
+        String testString = '<div style="color: #ffffb3"><br /><br /><b>Cheaper by the dozen</b><br /><br /></div><div style="color: white">Show time: 04/15/2019 12:00 PM EST</div><div style="color: white">Location: AMC Theater<br /><br /></div><div style="color: #ffffb3"><br /><br /><b>Cheaper by the dozen 2</b><br /><br /></div><div style="color: white">Sorry, no results are available for showtimes and locations.</div>';
+        
+        FindShowTimes showTimes = new FindShowTimes();
+        
+        showTimes.cinema = 'AMC Theater';
+        showTimes.movieTitle = 'Cheaper';
+        showTimes.showDateTimeBeginningIn = null;
+        showTimes.showDateTimeEndingIn = null;
+        showTimes.triggerSearch = 'Search';
+        
+        System.assertEquals(testString, showTimes.getSearchResultsByMoviesAndLocation());
+        
+        //Negative
+        testString = '<div style="color: #ff8080">Sorry, but your search returned no results for "Transformers".  Try a different spelling for your movie title, and/or broaden your search criteria.</div>';
+        
+        showTimes.cinema = 'AMC Theater';
+        showTimes.movieTitle = 'Transformers';
+        showTimes.showDateTimeBeginningIn = null;
+        showTimes.showDateTimeEndingIn = null;
+        showTimes.triggerSearch = 'Search';
+        
+        System.assertEquals(testString, showTimes.getSearchResultsByMoviesAndLocation());
+    }
+    
+    //Seventh search combination
+    //Search by all filters
+    @istest(SeeAllData=true) static void testGetSearchRecords() {
+        
+        //Positive
+        FindShowTimes showTimes = new FindShowTimes();
+        
+        showTimes.cinema = 'AMC Theater';
+        showTimes.movieTitle = 'Cheaper';
+        showTimes.showDateTimeBeginningIn = DateTime.valueOf('2019-04-11 05:00:00');
+        showTimes.showDateTimeEndingIn = DateTime.valueOf('2019-04-16 05:00:00');
+        showTimes.triggerSearch = 'Search';
+        
+        System.assertEquals(2, showTimes.getSearchRecords());
+        
+        //Negative
+        showTimes.cinema = 'AMC Theater';
+        showTimes.movieTitle = 'Transformers';
+        showTimes.showDateTimeBeginningIn = DateTime.valueOf('2019-04-11 05:00:00');
+        showTimes.showDateTimeEndingIn = DateTime.valueOf('2019-04-16 05:00:00');
+        showTimes.triggerSearch = 'Search';
+        
+        System.assertEquals(0, showTimes.getSearchRecords());
+    }
+    
+    //Seventh search combination
+    //Search by all filters
+    @istest(SeeAllData=true) static void testGetSearchResults() {
+        
+        //Positive
+        String testString = '<div style="color: #ffffb3"><br /><br /><b>Cheaper by the dozen</b><br /><br /></div><div style="color: white">Show time: 04/15/2019 12:00 PM EST</div><div style="color: white">Location: AMC Theater<br /><br /></div><div style="color: #ffffb3"><br /><br /><b>Cheaper by the dozen 2</b><br /><br /></div><div style="color: white">Sorry, no results are available for showtimes and locations.</div>';
+        
+        FindShowTimes showTimes = new FindShowTimes();
+        
+        showTimes.cinema = 'AMC Theater';
+        showTimes.movieTitle = 'Cheaper';
+        showTimes.showDateTimeBeginningIn = DateTime.valueOf('2019-04-11 05:00:00');
+        showTimes.showDateTimeEndingIn = DateTime.valueOf('2019-04-16 05:00:00');
+        showTimes.triggerSearch = 'Search';
+        
+        System.assertEquals(testString, showTimes.getSearchResults());
+        
+        //Negative
+        testString = '<div style="color: #ff8080">Sorry, but your search returned no results for "Transformers".  Try a different spelling for your movie title, and/or broaden your search criteria.</div>';
+        
+        showTimes.cinema = 'AMC Theater';
+        showTimes.movieTitle = 'Transformers';
+        showTimes.showDateTimeBeginningIn = DateTime.valueOf('2019-04-11 05:00:00');
+        showTimes.showDateTimeEndingIn = DateTime.valueOf('2019-04-16 05:00:00');
+        showTimes.triggerSearch = 'Search';
+        
+        System.assertEquals(testString, showTimes.getSearchResults());
+    }   
+}
